@@ -1,0 +1,7 @@
+/.vs/
+/Logs/
+/obj/
+/Library/ShaderCache/
+*.sln
+*.csproj
+/Library/Artifacts/

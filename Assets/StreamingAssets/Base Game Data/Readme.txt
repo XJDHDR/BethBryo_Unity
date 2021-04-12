@@ -1,0 +1,1 @@
+This folder is used to store game data that is in formats compatible with Unity.

@@ -1,0 +1,1 @@
+This folder is used to store mod data that is in formats compatible with Unity.
