@@ -5,3 +5,5 @@
 *.sln
 *.csproj
 /Library/Artifacts/
+/Library/PackageManager/ProjectCache
+/Library/PackageManager/ProjectCache.md5
