@@ -7,3 +7,6 @@
 /Library/Artifacts/
 /Library/PackageManager/ProjectCache
 /Library/PackageManager/ProjectCache.md5
+/Library/BurstCache/
+/Library/ScriptAssemblies/
+/Library/PackageCache/
