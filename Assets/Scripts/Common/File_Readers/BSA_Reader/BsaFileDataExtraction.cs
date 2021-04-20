@@ -2,6 +2,9 @@
 using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Jobs;
 
 namespace BethBryo_for_Unity
 {
@@ -15,14 +18,14 @@ namespace BethBryo_for_Unity
 	{
 		internal bool IsDataCompressed;
 		internal bool SaveDataToPath;
+		internal int FileDataSize;
 		internal string FileFullPath;
-		internal uint FileDataSize;
 		internal uint FileDataOffset;
 	}
 
 	internal static class BsaFileDataExtraction
 	{
-		internal static long NumThreadsDone;
+		public static long NumThreadsDone;
 
 		private static string _pathToBsa;
 		private static BsaFileExtractParams[] _bsaFileExtractParams;
@@ -32,57 +35,56 @@ namespace BethBryo_for_Unity
 		{
 			_pathToBsa = FileExtractionArgs.PassedPathToBsa;
 			_bsaFileExtractParams = PassedBsaFileExtractParams;
-			_extractedFiles = new MemoryStream[FileExtractionArgs.TotalStoredFiles];
-			Parallel.For(0, FileExtractionArgs.TotalStoredFiles, new ParallelOptions() { MaxDegreeOfParallelism = 4 }, _extractIndividualByteSequenceToMemoryStreamInThread);
+			Parallel.For(0, FileExtractionArgs.TotalStoredFiles, new ParallelOptions() { MaxDegreeOfParallelism = 4 }, _extractIndividualByteSequenceToFileInThread);
 		}
 		
-		internal static void ExtractBsaFileDataToMemoryStreams(FileExtractionArgs FileExtractionArgs, BsaFileExtractParams[] PassedBsaFileExtractParams)
+		internal static void ExtractBsaFileDataToMemory(FileExtractionArgs FileExtractionArgs, BsaFileExtractParams[] PassedBsaFileExtractParams, out MemoryStream[] ExtractedFiles)
 		{
-			_pathToBsa = FileExtractionArgs.PassedPathToBsa;
-			_bsaFileExtractParams = PassedBsaFileExtractParams;
-			_extractedFiles = new MemoryStream[FileExtractionArgs.TotalStoredFiles];
-			Parallel.For(0, FileExtractionArgs.TotalStoredFiles, new ParallelOptions() { MaxDegreeOfParallelism = 4 }, _extractIndividualByteSequenceToMemoryStreamInThread);
+			new ExtractIndividualByteSequenceToMemory
+			{
+				PathToBSA = FileExtractionArgs.PassedPathToBsa,
+				BsaFileExtractParams = PassedBsaFileExtractParams
+				//ExtractedFiles = 
+			};
 
+
+			//_pathToBsa = FileExtractionArgs.PassedPathToBsa;
+			//_bsaFileExtractParams = PassedBsaFileExtractParams;
+			//Parallel.For(0, FileExtractionArgs.TotalStoredFiles, new ParallelOptions() { MaxDegreeOfParallelism = 4 }, _extractIndividualByteSequenceToMemoryInThread);
+
+			ExtractedFiles = _extractedFiles;
 			//Parallel.ForEach(_bsaFileExtractParams, new ParallelOptions() { MaxDegreeOfParallelism = 4 }, _extractIndividualFileInThread);
 			//_extractIndividualFileInThread(_bsaFileExtractParams _BsaFileExtractParams)
+
+			//_extractedFiles.Dispose(true);
 		}
 
 		private static void _extractIndividualByteSequenceToFileInThread(long _iterNumber)
 		{
-
 		}
 
-		private static void _extractIndividualByteSequenceToMemoryStreamInThread(long _iterNumber)
+		private static void _extractIndividualByteSequenceToMemoryInThread(long _iterNumber)
 		{
 			using (BinaryReader _bsaFileStream = new BinaryReader(new FileStream(_pathToBsa, FileMode.Open, FileAccess.Read)))  // might need FileShare.ReadWrite if access violation appears.
 			{
 				_bsaFileStream.BaseStream.Position = _bsaFileExtractParams[_iterNumber].FileDataOffset;
-				MemoryStream _extractedFileBytes = new MemoryStream();
-				_extractedFileBytes.SetLength(_bsaFileExtractParams[_iterNumber].FileDataSize);
 
 				if (_bsaFileExtractParams[_iterNumber].IsDataCompressed == true)
 				{
 					uint _decompressedDataLength = _bsaFileStream.ReadUInt32();
-					if (_bsaFileExtractParams[_iterNumber].FileDataSize > 2147483647)
+					using (MemoryStream _extractedCompressedData = new MemoryStream(_bsaFileStream.ReadBytes(_bsaFileExtractParams[_iterNumber].FileDataSize)))
 					{
-						_extractedFileBytes.Write(_bsaFileStream.ReadBytes(2147483647), 0, 2147483647);
-						_extractedFileBytes.WriteByte(_bsaFileStream.ReadByte());
-						_extractedFileBytes.Write(_bsaFileStream.ReadBytes((int)(_bsaFileExtractParams[_iterNumber].FileDataSize - 2147483648)), 0,
-							(int)(_bsaFileExtractParams[_iterNumber].FileDataSize - 2147483648));
+						_decompressZlibData(_extractedCompressedData);
 					}
-					else
-						_extractedFileBytes = new MemoryStream(_bsaFileStream.ReadBytes((int)_bsaFileExtractParams[_iterNumber].FileDataSize));
-					_decompressZlibData(_extractedFileBytes);
 				}
 				else
 				{
-					//_extractedFileBytes = new MemoryStream(_bsaFileStream.ReadBytes(_bsaFileExtractParams[_iterNumber]._fileDataSize));
+					_extractedFiles[_iterNumber] = new MemoryStream(_bsaFileStream.ReadBytes(_bsaFileExtractParams[_iterNumber].FileDataSize));
 				}
 
 				//_extractedFiles[_iterNumber] = _bsaFileStream;	// Edit
-
-				Interlocked.Increment(ref NumThreadsDone);
 			}
+			Interlocked.Increment(ref NumThreadsDone);
 		}
 		private static void _decompressZlibData(MemoryStream _extractedFileBytes)
 		{
@@ -100,6 +102,51 @@ namespace BethBryo_for_Unity
 					}
 				}
 			}
+		}
+	}
+
+	[BurstCompile(CompileSynchronously = true)]
+	internal struct ExtractIndividualByteSequenceToMemory : IJobParallelFor
+	{
+		[ReadOnly] public string PathToBSA; // Managed type
+		[ReadOnly] public BsaFileExtractParams[] BsaFileExtractParams;
+		public MemoryStream[] ExtractedFiles;
+
+		public void Execute(int Index)
+		{
+			using (BinaryReader _bsaFileStream = new BinaryReader(new FileStream(PathToBSA, FileMode.Open, FileAccess.Read)))  // might need FileShare.ReadWrite if access violation appears.
+			{
+				_bsaFileStream.BaseStream.Position = BsaFileExtractParams[Index].FileDataOffset;
+
+				if (BsaFileExtractParams[Index].IsDataCompressed == true)
+				{
+					uint _decompressedDataLength = _bsaFileStream.ReadUInt32();
+					using (MemoryStream _extractedCompressedData = new MemoryStream(_bsaFileStream.ReadBytes(BsaFileExtractParams[Index].FileDataSize)))
+					{
+						//		using (FileStream originalFileStream = fileToDecompress.OpenRead())	// Might not need this
+						{
+							//			string currentFileName = fileToDecompress.FullName;
+							//			string newFileName = currentFileName.Remove(currentFileName.Length - fileToDecompress.Extension.Length);
+
+							//			using (FileStream decompressedFileStream = File.Create(newFileName))
+							{
+								//				using (DeflateStream decompressionStream = new DeflateStream(originalFileStream, CompressionMode.Decompress))
+								{
+									//					decompressionStream.CopyTo(decompressedFileStream);
+									//					Debug.Log("Decompressed: {0}", fileToDecompress.Name);
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					ExtractedFiles[Index] = new MemoryStream(_bsaFileStream.ReadBytes(BsaFileExtractParams[Index].FileDataSize));
+				}
+
+				//_extractedFiles[_iterNumber] = _bsaFileStream;	// Edit
+			}
+			Interlocked.Increment(ref BsaFileDataExtraction.NumThreadsDone);
 		}
 	}
 }

@@ -31,8 +31,22 @@ namespace BethBryo_for_Unity
 		internal ulong FileNameHash;
 		internal bool DefaultCompressionInverted;
 		internal uint FileSize;
-		internal uint FileDataOffset;       // This offset is from the start of the BSA, not from any record.
+		internal uint FileDataOffset;
 		internal string FileName;
+	}
+
+	internal enum BSAContentType : uint
+	{
+		Nothing		= 0b_0000_0000_0000,  // 0
+		Meshes		= 0b_0000_0000_0001,  // 1
+		Textures	= 0b_0000_0000_0010,  // 2
+		Menus		= 0b_0000_0000_0100,  // 4
+		Sounds		= 0b_0000_0000_1000,  // 8
+		Voices		= 0b_0000_0001_0000,  // 16
+		Shaders		= 0b_0000_0010_0000,  // 32
+		Trees		= 0b_0000_0100_0000,  // 64
+		Fonts		= 0b_0000_1000_0000,  // 128
+		Misc		= 0b_0001_0000_0000,  // 256
 	}
 
 	internal static class BsaHeaderAndRecordExtraction
@@ -47,7 +61,7 @@ namespace BethBryo_for_Unity
 		/// <param name="_currentArrayIndex">A signed integer that will persist for the life of the FileStream. Indicates the position of the BytesToTypes' pointer.
 		/// If you move the FileStream's pointer manually, you should move this pointer by the same amount.</param>
 		/// <returns>Returns a signed integer with the number of bytes that were read from the FileStream.</returns>
-		internal static void ExtractBsaContents(string PathToBsa, string GameName)
+		internal static void ExtractBsaContents(string PathToBsa, BSAContentType BSAType, SupportedGames CurrentGame)
 		{
 			if (File.Exists(PathToBsa))
 			{
@@ -62,7 +76,7 @@ namespace BethBryo_for_Unity
 					
 					// Read the BSA header and records
 					BsaHeader _bsaHeader = new BsaHeader();
-					if (_readBsaHeader(GameName, ref _bytesParams, ref _bsaHeader))
+					if (_readBsaHeader(CurrentGame, BSAType, ref _bytesParams, ref _bsaHeader))
 					{
 						_readBsaFolderRecords(_bsaHeader, ref _bytesParams, out FolderRecords[] _folderRecords);
 						_readBsaFolderNamesAndFileRecords(_bsaHeader, _folderRecords, ref _bytesParams, out FolderNameAndFileRecords[] _folderNameAndFileRecords);
@@ -71,11 +85,11 @@ namespace BethBryo_for_Unity
 			}
 		}
 
-		private static bool _readBsaHeader(string _gameName, ref BytesParams _bytesParams, ref BsaHeader _bsaHeader)
+		private static bool _readBsaHeader(SupportedGames _currentGame, BSAContentType _bSAType, ref BytesParams _bytesParams, ref BsaHeader _bsaHeader)
 		{
 			// Read first 4 bytes of file and determine if those bytes are valid (it is "BSA " for every BethBryo BSA).
 			char[] _bsaStringArr = new char[4];
-			for (ushort _i = 0; _i < 4; _i += 1)
+			for (ushort _i = 0; _i < 4; ++_i)
 			{
 				_bsaStringArr[_i] = System.Convert.ToChar(BytesToTypes.BytesToSingleByte8(ref _bytesParams, out _));
 			}
@@ -90,12 +104,12 @@ namespace BethBryo_for_Unity
 			uint _bsaVersion = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
 			switch (_bsaVersion)
 			{
-				case 103 when _gameName == "Oblivion":
-				//case ?103? when _gameName == "Fallout3":
-				//case ?103? when _gameName == "FalloutNV":
-				//case 104 when _gameName == "Skyrim":
-				//case ?105? when _gameName == "Fallout4":
-				//case 105 when _gameName == "SkyrimSE":
+				case 103 when _currentGame == SupportedGames.Oblivion:
+				case 103 when _currentGame == SupportedGames.Fallout3:
+				case 103 when _currentGame == SupportedGames.FalloutNV:
+				case 104 when _currentGame == SupportedGames.Skyrim:
+				case 105 when _currentGame == SupportedGames.SkyrimSE:
+				case 105 when _currentGame == SupportedGames.Fallout4:
 					// BSA is valid so continue executing this method.
 					break;
 
@@ -172,8 +186,15 @@ namespace BethBryo_for_Unity
 				return false;
 			}
 
+			// Read next 4 bytes to find the BSA's set Content Type Flags and check if they are what was expected. 
 			uint _bsaContentType = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
+			if (_bsaContentType != (uint)_bSAType)
+			{
+				Debug.LogErrorFormat("{_openedBsa} has it's Content Type Flags set to {_bsaContentType}, which is not what was expected ({(uint)_bSAType}). This could indicate a corrupted or empty file.");
+				return false;
+			}
 
+			// The FileStream's pointer should be at the start of the Folder Records. Check if it's position is currently at the offset indicated in the Folder Record Offset uint. 
 			long _currentPointerPosition = _bytesParams.FileStream.Position - 4096 + _bytesParams.CacheCurrentPos;
 			if (_currentPointerPosition != _folderRecordsOffset)
 			{
@@ -188,7 +209,7 @@ namespace BethBryo_for_Unity
 		private static bool _readBsaFolderRecords(BsaHeader _bsaHeader, ref BytesParams _bytesParams, out FolderRecords[] _folderRecords)
 		{
 			_folderRecords = new FolderRecords[_bsaHeader.TotalFolderCount];
-			for (uint _i = 0; _i < _bsaHeader.TotalFolderCount; _i += 1)
+			for (uint _i = 0; _i < _bsaHeader.TotalFolderCount; ++_i)
 			{
 				// Read next 8 bytes to find the folder name hash for this folder. 
 				_folderRecords[_i].FolderNameHash = BytesToTypes.BytesToULong64(ref _bytesParams, out _);
@@ -220,7 +241,7 @@ namespace BethBryo_for_Unity
 			uint _countedLengthOfFolderNames = 0;
 			_folderNameAndFileRecords = new FolderNameAndFileRecords[_bsaHeader.TotalFolderCount];
 
-			for (uint _i = 0; _i < _bsaHeader.TotalFolderCount; _i += 1)
+			for (uint _i = 0; _i < _bsaHeader.TotalFolderCount; ++_i)
 			{
 				_currentPointerPosition = _bytesParams.FileStream.Position - 4096 + _bytesParams.CacheCurrentPos;
 				if (_currentPointerPosition != _folderRecords[_i].NameAndFileRecordsOffset)
@@ -235,7 +256,7 @@ namespace BethBryo_for_Unity
 				byte _folderNameStringLength = BytesToTypes.BytesToSingleByte8(ref _bytesParams, out _);
 				_countedLengthOfFolderNames += _folderNameStringLength;
 				char[] _bsaStringArr = new char[_folderNameStringLength];
-				for (ushort _j = 0; _j < (_folderNameStringLength - 1); _j += 1)
+				for (ushort _j = 0; _j < (_folderNameStringLength - 1); ++_j)
 				{
 					_bsaStringArr[_i] = System.Convert.ToChar(BytesToTypes.BytesToSingleByte8(ref _bytesParams, out _));
 				}
@@ -248,7 +269,7 @@ namespace BethBryo_for_Unity
 				}
 
 				_folderNameAndFileRecords[_i].FileRecords = new FileRecords[_folderRecords[_i].FoldersFileCount];
-				for (uint _j = 0; _j < _folderRecords[_i].FoldersFileCount; _j += 1)
+				for (uint _j = 0; _j < _folderRecords[_i].FoldersFileCount; ++_j)
 				{
 					_folderNameAndFileRecords[_i].FileRecords[_j].FileNameHash = BytesToTypes.BytesToULong64(ref _bytesParams, out _);
 					uint _tempFileSize = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
@@ -271,7 +292,7 @@ namespace BethBryo_for_Unity
 
 					_folderNameAndFileRecords[_i].FileRecords[_j].FileSize = _tempFileSize;
 
-					// Offset to the file's raw data. This offset is from the start of the BSA, not from any record.
+					// Offset to the file's raw data from the start of the BSA.
 					_folderNameAndFileRecords[_i].FileRecords[_j].FileDataOffset = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
 				}
 			}
@@ -284,9 +305,9 @@ namespace BethBryo_for_Unity
 			}
 
 			uint _countedLengthOfFileNames = 0;
-			for (uint _i = 0; _i < _bsaHeader.TotalFolderCount; _i += 1)
+			for (uint _i = 0; _i < _bsaHeader.TotalFolderCount; ++_i)
 			{
-				for (uint _j = 0; _j < _folderRecords[_i].FoldersFileCount; _j += 1)
+				for (uint _j = 0; _j < _folderRecords[_i].FoldersFileCount; ++_j)
 				{
 					// Get the name of the current file in the File Name block, which is stored as a zero-terminated string.
 					// Since there is no length indicated, we have to read byte-by-byte until we reach a zero.

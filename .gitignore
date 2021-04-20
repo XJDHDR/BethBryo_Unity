@@ -1,12 +1,10 @@
 /.vs/
+/Library/*
 /Logs/
 /obj/
-/Library/ShaderCache/
+/Temp/
+/UserSettings/
 *.sln
 *.csproj
-/Library/Artifacts/
-/Library/PackageManager/ProjectCache
-/Library/PackageManager/ProjectCache.md5
-/Library/BurstCache/
-/Library/ScriptAssemblies/
-/Library/PackageCache/
+
+!/Library/LastSceneManagerSetup.txt
