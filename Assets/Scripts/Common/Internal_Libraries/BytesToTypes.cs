@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace BethBryo_for_Unity
+namespace BethBryo_for_Unity_Common
 {
 	/// <summary>
 	/// Defines the input variables required for all the FileStream caching methods to work.

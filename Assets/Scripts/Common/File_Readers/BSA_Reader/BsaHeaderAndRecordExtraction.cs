@@ -2,7 +2,7 @@
 using System.IO;
 using UnityEngine;
 
-namespace BethBryo_for_Unity
+namespace BethBryo_for_Unity_Common
 {
 	internal struct BsaHeader
 	{

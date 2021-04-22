@@ -1,4 +1,4 @@
-namespace BethBryo_for_Unity
+namespace BethBryo_for_Unity_Common
 {
 	internal enum SupportedGames : byte
 	{

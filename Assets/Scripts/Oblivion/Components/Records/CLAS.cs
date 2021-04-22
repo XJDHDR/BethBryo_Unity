@@ -1,10 +1,11 @@
 using System;
+using Unity.Collections;
 using Unity.Entities;
 
 namespace BethBryo_for_Unity_Oblivion
 {
 	[Serializable]
-	public struct TES4Header : IComponentData
+	public struct CLAS : IComponentData
 	{
 		// Add fields to your component here. Remember that:
 		//
