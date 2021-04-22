@@ -89,7 +89,7 @@ namespace BethBryo_for_Unity_Oblivion
 		public CSTY CombatStyle;
 
 		// Facegen Data
-		public FixedBytes510 FaceGenGeomSymmetric;
+		public FixedBytes510 FaceGenGeomSymmetric;		// Should decode these bytes into individual vars
 		public FixedBytes126 FaceGenGeomAsymmetric;
 		public FixedBytes510 FaceGenTexture;
 	}
