@@ -290,6 +290,7 @@ namespace BethBryo_for_Unity_Common
 						_tempFileSize -= 2147483648;
 					}
 
+					// Finally, get the size of the File Block. This size is the size of the raw file data as well as the uncompressed size UInt32 bytes.
 					_folderNameAndFileRecords[_i].FileRecords[_j].FileSize = _tempFileSize;
 
 					// Offset to the file's raw data from the start of the BSA.

@@ -9,7 +9,7 @@ namespace BethBryo_for_Unity_Oblivion
 	public struct RACE : IComponentData
 	{
 		// Header
-		public ushort ModID;
+		private ushort _modID;
 		public uint FormID;
 		public FixedString32 RecordID;
 
@@ -98,6 +98,8 @@ namespace BethBryo_for_Unity_Oblivion
 		public FixedBytes510 DefaultFaceGenGeomSymmetric;       // Should decode these bytes into individual vars
 		public FixedBytes126 DefaultFaceGenGeomAsymmetric;
 		public FixedBytes510 DefaultFaceGenTexture;
+
+		public ushort ModID { get => _modID; }
 	}
 
 	[Serializable]
