@@ -1,3 +1,6 @@
+// The license for this source code may be found here:
+// https://github.com/XJDHDR/BethBryo_for_Unity/blob/main/LICENSE
+
 namespace BethBryo_for_Unity_Common
 {
 	internal enum SupportedGames : byte

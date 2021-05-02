@@ -1,4 +1,7 @@
-﻿using System;
+﻿// The license for this source code may be found here:
+// https://github.com/XJDHDR/BethBryo_for_Unity/blob/main/LICENSE
+
+using System;
 using System.IO;
 
 namespace BethBryo_for_Unity_Common
@@ -6,17 +9,13 @@ namespace BethBryo_for_Unity_Common
 	/// <summary>
 	/// Defines the input variables required for all the FileStream caching methods to work.
 	/// </summary>
-	/// <param name="_bytesParams._fileStream">The FileStream you created for the file you want to read.</param>
-	/// <param name="_bytesParams._streamCache">An empty byte array which has been initialised with an index size of exactly 4096 that will persist for the life of the FileStream.</param>
-	/// <param name="_bytesParams._cacheCurrentPos">A signed integer that will persist for the life of the FileStream. Indicates the position of the BytesToTypes' pointer.
-	/// If you move the FileStream's pointer manually, you should move this pointer by the same amount.</param>
 	internal struct BytesParams
 	{
 		/// <summary>The FileStream you created for the file you want to read.</summary>
 		public FileStream FileStream;
-		/// <summary>An empty byte array which has been initialised with an index size of exactly 4096 that will persist for the life of the FileStream.</summary>
+		/// <summary>An empty byte array which has been initialised with an index size of exactly 4096 that will persist for the life of the FileStream. This holds the cached FileStream data.</summary>
 		public byte[] StreamCache;
-		/// <summary>A signed integer that will persist for the life of the FileStream.</param>
+		/// <summary>A signed integer that will persist for the life of the FileStream. Indicates the position of the BytesToTypes' pointer. If you move the FileStream's pointer manually, you should move this pointer by the same amount.</param>
 		public int CacheCurrentPos;
 	}
 

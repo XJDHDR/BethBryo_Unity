@@ -1,3 +1,6 @@
+// The license for this source code may be found here:
+// https://github.com/XJDHDR/BethBryo_for_Unity/blob/main/LICENSE
+
 using System;
 using Unity.Collections;
 using Unity.Entities;
@@ -17,6 +20,7 @@ namespace BethBryo_for_Unity_Oblivion
 		public FixedString512 Description;
 
 		public FixedList32<SPEL> DefaultSpells;
+		public FixedList32<RaceRelations> RaceRelations;
 		public FixedList32<SkillBoosts> SkillBoosts;
 
 		public float MaleHeight;
@@ -25,6 +29,7 @@ namespace BethBryo_for_Unity_Oblivion
 		public float FemaleWeight;
 
 		public bool IsPlayable;
+		public FixedString32 VoiceRaceName;	// Name of race that voice files will come from.
 
 		public HAIR DefaultHair;
 		public EYES DefaultEyes;
@@ -100,6 +105,13 @@ namespace BethBryo_for_Unity_Oblivion
 		public FixedBytes510 DefaultFaceGenTexture;
 
 		public ushort ModID { get => _modID; }
+	}
+
+	[Serializable]
+	public struct RaceRelations
+	{
+		public FixedString32 RaceName;
+		public sbyte DispositionModifier;
 	}
 
 	[Serializable]
