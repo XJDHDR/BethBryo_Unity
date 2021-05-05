@@ -5,9 +5,11 @@ BethBryo for Unity (BBU for short), is a project with the ultimate aim of gettin
 
 - Game built from the ground up to use Unity's DOTS framework.
 - Replicate original games as closely as possible.
+- Fix engine bugs (Note: not data bugs) if possible. For example, physics will not be tied to framerate.
 - Extra features not found in the original games (e.g. first person body, co-op multiplayer, drawcall batching, etc.)
 - Bring some features found in later games to earlier ones (e.g. occlusion planes to Oblivion and Morrowind)
-- Support for existing games' modding frameworks as much as possible.
+- Support for existing games' modding frameworks as much as possible, and enable new modding capabilities.
+- Restore Achievements for Oblivion and Fallout 3.
 
 
 # What are the current short-term goals?
@@ -16,14 +18,14 @@ I am currently working on adding support for extracting files from Oblivion's BS
 
 After that, I would like to add the following, probably simultaneously at times and not necessarily in this order:
 
-- Full support for reading data from Oblivion's ESM and ESP files.
-- Convert Oblivion's data files into Unity compatible formats:
-	- **DDS**: Natively supported but some of Oblivion's textures have a bug where they report a mipmap count that differs from the actual number present.
+- Full support for reading data from the rest of Oblivion's files.
+- Code for converting modded files into Unity compatible formats:
+	- **DDS**: Natively supported.
 	- **LOD and CMP**: Not required.
-	- **NIF**: Needs to be converted to Unity compatible formats. Will likely use OBJs for static models and FBXs or COLs for animated/rigged ones.
+	- **NIF**: Needs to be converted to Unity compatible formats. Will likely use OBJs for simple models and FBXs or COLs for more complicated (i.e. animated/rigged) ones.
 	- **KF**: Likely need to be converted into Animation Frames or similar.
 	- **EGM and TRI**: Will likely need to be converted to a text format that can be read by scripts that will deform the meshes as needed.
-	- **SPT**: Unity supports SpeedTree models but not these ones. Likely need to be converted to a later version that is supported.
+	- **SPT**: Unity supports SpeedTree models but not Oblivion's ones. Likely need to be converted to a later version that is supported.
 	- **MP3**: Natively supported.
 	- **LIP**: Likely need to be converted into Animation Frames or similar.
 	- **WAV**: Natively supported.
@@ -33,7 +35,7 @@ After that, I would like to add the following, probably simultaneously at times 
 	- **SDP**: The PSO and VSO files contained within can be decompiled back into the original HLSL, which might be natively supported.
 	- **BIK**: Will need to be converted into MP4 videos.
 	- **ESM and ESP**: Useful data will likely be converted into XML format or similar that can be looked up more easily without parsing the whole file.
-- Convert all data found in Oblivion.ESM and the game's DLC into Unity compatible formats (e.g. create a new Material for every texture, a new AudioClip for every sound, new Prefab for every record with a model, etc.)
+- Make all data found in Oblivion.ESM and the game's DLC easier to process (e.g. create a new Material for every texture, a new AudioClip for every sound, new Prefab for every record, etc.)
 - Modding support for the above.
 
 After that, I will start implementing Oblivion's game mechanics. I won't let this schedule stop any contributors who would like to start adding things that are not in this roadmap.

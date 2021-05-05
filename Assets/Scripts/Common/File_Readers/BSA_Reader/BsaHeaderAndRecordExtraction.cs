@@ -33,7 +33,7 @@ namespace BethBryo_for_Unity_Common
 	{
 		internal ulong FileNameHash;
 		internal bool DefaultCompressionInverted;
-		internal uint FileSize;
+		internal int FileSize;
 		internal uint FileDataOffset;
 		internal string FileName;
 	}
@@ -64,8 +64,13 @@ namespace BethBryo_for_Unity_Common
 		/// <param name="_currentArrayIndex">A signed integer that will persist for the life of the FileStream. Indicates the position of the BytesToTypes' pointer.
 		/// If you move the FileStream's pointer manually, you should move this pointer by the same amount.</param>
 		/// <returns>Returns a signed integer with the number of bytes that were read from the FileStream.</returns>
-		internal static void ExtractBsaContents(string PathToBsa, BSAContentType BSAType, SupportedGames CurrentGame)
+		internal static bool ExtractBsaContents(string PathToBsa, BSAContentType BSAType, SupportedGames CurrentGame, 
+			out BsaHeader BsaHeader, out FolderRecords[] FolderRecords, out FolderNameAndFileRecords[] FolderNameAndFileRecords)
 		{
+			BsaHeader = new BsaHeader();
+			FolderRecords = null;
+			FolderNameAndFileRecords = null;
+
 			if (File.Exists(PathToBsa))
 			{
 				using (FileStream _bsaFileStream = new FileStream(PathToBsa, FileMode.Open, FileAccess.Read))
@@ -80,14 +85,23 @@ namespace BethBryo_for_Unity_Common
 					BytesToTypes.RefillBytesArray(ref _bytesParams);
 					
 					// Read the BSA header and records
-					BsaHeader _bsaHeader = new BsaHeader();
-					if (_readBsaHeader(CurrentGame, BSAType, ref _bytesParams, ref _bsaHeader))
+					if (_readBsaHeader(CurrentGame, BSAType, ref _bytesParams, ref BsaHeader))
 					{
-						_readBsaFolderRecords(_bsaHeader, ref _bytesParams, out FolderRecords[] _folderRecords);
-						_readBsaFolderNamesAndFileRecords(_bsaHeader, _folderRecords, ref _bytesParams, out FolderNameAndFileRecords[] _folderNameAndFileRecords);
+						_readBsaFolderRecords(BsaHeader, ref _bytesParams, out FolderRecords);
+						_readBsaFolderNamesAndFileRecords(BsaHeader, FolderRecords, ref _bytesParams, out FolderNameAndFileRecords);
+					}
+					else
+					{
+						return false;
 					}
 				}
 			}
+			else
+			{
+				Debug.LogErrorFormat("Could not find file: {0}. \nPlease check if the correct file path has been given.", PathToBsa);
+				return false;
+			}
+			return true;
 		}
 
 		private static bool _readBsaHeader(SupportedGames _currentGame, BSAContentType _bSAType, ref BytesParams _bytesParams, ref BsaHeader _bsaHeader)
@@ -96,12 +110,20 @@ namespace BethBryo_for_Unity_Common
 			char[] _bsaStringArr = new char[4];
 			for (ushort _i = 0; _i < 4; ++_i)
 			{
-				_bsaStringArr[_i] = System.Convert.ToChar(BytesToTypes.BytesToSingleByte8(ref _bytesParams, out _));
+				byte _readByte = BytesToTypes.BytesToSingleByte8(ref _bytesParams, out _);
+				if (_readByte != 0)
+				{
+					_bsaStringArr[_i] = System.Convert.ToChar(_readByte);
+				}
+				else
+				{
+					_bsaStringArr[_i] = System.Convert.ToChar(" "); ;
+				}
 			}
 			string _characterCode = new string(_bsaStringArr);
 			if (! Equals(_characterCode, "BSA "))
 			{
-				Debug.LogErrorFormat("{1} does not begin with the correct character code. It should be \"BSA \" but \"{2}\" was read instead. " +
+				Debug.LogErrorFormat("{0} does not begin with the correct character code. It should be \"BSA \" but \"{1}\" was read instead. " +
 					"This could indicate a corrupted file.", _bytesParams.FileStream.Name, _characterCode);
 				return false;
 			}
@@ -120,7 +142,7 @@ namespace BethBryo_for_Unity_Common
 					break;
 
 				default:
-					Debug.LogErrorFormat("{1} has a version number of {2}, which does not match that used by {3} BSAs.", _bytesParams.FileStream.Name, _bsaVersion, _currentGame);
+					Debug.LogErrorFormat("{0} has a version number of {1}, which does not match that used by {2} BSAs.", _bytesParams.FileStream.Name, _bsaVersion, _currentGame);
 					return false;
 			}
 
@@ -129,7 +151,7 @@ namespace BethBryo_for_Unity_Common
 			uint _folderRecordsOffset = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
 			if (_folderRecordsOffset != 36)
 			{
-				Debug.LogErrorFormat("{1} has an incorrect FolderRecord offset. It should be \"36\" but \"{2}\" was read instead. " +
+				Debug.LogErrorFormat("{0} has an incorrect FolderRecord offset. It should be \"36\" but \"{1}\" was read instead. " +
 					"This could indicate a corrupted file.", _bytesParams.FileStream.Name, _folderRecordsOffset);
 				return false;
 			}
@@ -140,17 +162,17 @@ namespace BethBryo_for_Unity_Common
 			uint _archiveFlags = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
 			if ((_archiveFlags & 1) != 1)	// Is bit 1 set? - Any number ANDed with 1 is equal to 1 if bit 1 set.
 			{
-				Debug.LogErrorFormat("{1} has it's \"Names for Directories\" Archive Flag unset when it should be. This could indicate a corrupted file.", _bytesParams.FileStream.Name);
+				Debug.LogErrorFormat("{0} has it's \"Names for Directories\" Archive Flag unset when it should be. This could indicate a corrupted file.", _bytesParams.FileStream.Name);
 				return false;
 			}
 			else if ((_archiveFlags & 2) != 2)    // Is bit 2 set? - Any number ANDed with 2 is equal to 2 if bit 2 set.
 			{
-				Debug.LogErrorFormat("{1} has it's \"Names for Files\" Archive Flag unset when it should be. This could indicate a corrupted file.", _bytesParams.FileStream.Name);
+				Debug.LogErrorFormat("{0} has it's \"Names for Files\" Archive Flag unset when it should be. This could indicate a corrupted file.", _bytesParams.FileStream.Name);
 				return false;
 			}
-			else if ((_archiveFlags & 128) != 128)    // Is bit 7 set? - Any number ANDed with 128 is equal to 128 if bit 7 set.
+			else if ((_archiveFlags & 128) == 128)    // Is bit 7 set? - Any number ANDed with 128 is equal to 128 if bit 7 set.
 			{
-				Debug.LogErrorFormat("{1} has it's \"Big-Endian\" Archive Flag set when it shouldn't be. This could indicate either a corrupted file " +
+				Debug.LogErrorFormat("{0} has it's \"Big-Endian\" Archive Flag set when it shouldn't be. This could indicate either a corrupted file " +
 					"or that you are trying to use a console version's BSA, which isn't supported.", _bytesParams.FileStream.Name);
 				return false;
 			}
@@ -166,7 +188,7 @@ namespace BethBryo_for_Unity_Common
 			_bsaHeader.TotalFolderCount = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
 			if (_bsaHeader.TotalFolderCount < 1)
 			{
-				Debug.LogErrorFormat("{1} has it's Total Folders counter set to less than 1. This could indicate a corrupted or empty file.", _bytesParams.FileStream.Name);
+				Debug.LogErrorFormat("{0} has it's Total Folders counter set to less than 1. This could indicate a corrupted or empty file.", _bytesParams.FileStream.Name);
 				return false;
 			}
 
@@ -174,7 +196,7 @@ namespace BethBryo_for_Unity_Common
 			_bsaHeader.TotalFileCount = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
 			if (_bsaHeader.TotalFileCount < 1)
 			{
-				Debug.LogErrorFormat("{1} has it's Total Files counter set to less than 1. This could indicate a corrupted or empty file.", _bytesParams.FileStream.Name);
+				Debug.LogErrorFormat("{0} has it's Total Files counter set to less than 1. This could indicate a corrupted or empty file.", _bytesParams.FileStream.Name);
 				return false;
 			}
 
@@ -182,7 +204,7 @@ namespace BethBryo_for_Unity_Common
 			_bsaHeader.TotalLengthAllFolderNames = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
 			if (_bsaHeader.TotalLengthAllFolderNames < 1)
 			{
-				Debug.LogErrorFormat("{1} has it's Total Folder Name length set to less than 1. This could indicate a corrupted or empty file.", _bytesParams.FileStream.Name);
+				Debug.LogErrorFormat("{0} has it's Total Folder Name length set to less than 1. This could indicate a corrupted or empty file.", _bytesParams.FileStream.Name);
 				return false;
 			}
 
@@ -190,7 +212,7 @@ namespace BethBryo_for_Unity_Common
 			_bsaHeader.TotalLengthAllFileNames = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
 			if (_bsaHeader.TotalLengthAllFileNames < 1)
 			{
-				Debug.LogErrorFormat("{1} has it's Total File Name length set to less than 1. This could indicate a corrupted or empty file.", _bytesParams.FileStream.Name);
+				Debug.LogErrorFormat("{0} has it's Total File Name length set to less than 1. This could indicate a corrupted or empty file.", _bytesParams.FileStream.Name);
 				return false;
 			}
 
@@ -198,7 +220,7 @@ namespace BethBryo_for_Unity_Common
 			uint _bsaContentType = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
 			if (_bsaContentType != (uint)_bSAType)
 			{
-				Debug.LogErrorFormat("{1} has it's Content Type Flags set to {2}, which is not what was expected ({3}). " +
+				Debug.LogErrorFormat("{0} has it's Content Type Flags set to {2}, which is not what was expected ({3}). " +
 					"This could indicate a corrupted or empty file.", _bytesParams.FileStream.Name, _bsaContentType, (uint)_bSAType);
 				return false;
 			}
@@ -207,8 +229,8 @@ namespace BethBryo_for_Unity_Common
 			long _currentPointerPosition = _bytesParams.FileStream.Position - 4096 + _bytesParams.CacheCurrentPos;
 			if (_currentPointerPosition != _folderRecordsOffset)
 			{
-				Debug.LogErrorFormat("The pointer for reading data from {1} currently has it's pointer at byte {2} after it finished reading the BSA Header. " +
-					"It is supposed to be at byte {3}. This could indicate a corrupted file.", _bytesParams.FileStream.Name, _currentPointerPosition, _folderRecordsOffset);
+				Debug.LogErrorFormat("The pointer for reading data from {0} currently has it's pointer at byte {1} after it finished reading the BSA Header. " +
+					"It is supposed to be at byte {2}. This could indicate a corrupted file.", _bytesParams.FileStream.Name, _currentPointerPosition, _folderRecordsOffset);
 				return false;
 			}
 
@@ -227,7 +249,7 @@ namespace BethBryo_for_Unity_Common
 				_folderRecords[_i].FoldersFileCount = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
 				if (_folderRecords[_i].FoldersFileCount < 1)
 				{
-					Debug.LogErrorFormat("{1} has it's Total File Name length set to less than 1. This could indicate a corrupted record.", _bytesParams.FileStream.Name);
+					Debug.LogErrorFormat("{0} has it's Total File Name length set to less than 1. This could indicate a corrupted record.", _bytesParams.FileStream.Name);
 					return false;
 				}
 
@@ -236,7 +258,7 @@ namespace BethBryo_for_Unity_Common
 				_folderRecords[_i].NameAndFileRecordsOffset = BytesToTypes.BytesToUInt32(ref _bytesParams, out _) - _bsaHeader.TotalLengthAllFileNames;
 				if (_folderRecords[_i].NameAndFileRecordsOffset < 1)
 				{
-					Debug.LogErrorFormat("{1} has one of it's Folder Name And Files Record offsets set to less than 1. This could indicate a corrupted record.", _bytesParams.FileStream.Name);
+					Debug.LogErrorFormat("{0} has one of it's Folder Name And Files Record offsets set to less than 1. This could indicate a corrupted record.", _bytesParams.FileStream.Name);
 					return false;
 				}
 			}
@@ -249,14 +271,15 @@ namespace BethBryo_for_Unity_Common
 			uint _countedLengthOfFolderNames = 0;
 			_folderNameAndFileRecords = new FolderNameAndFileRecords[_bsaHeader.TotalFolderCount];
 
+			int _fileCount = 0;
 			long _currentPointerPosition;
 			for (uint _i = 0; _i < _bsaHeader.TotalFolderCount; ++_i)
 			{
 				_currentPointerPosition = _bytesParams.FileStream.Position - 4096 + _bytesParams.CacheCurrentPos;
 				if (_currentPointerPosition != _folderRecords[_i].NameAndFileRecordsOffset)
 				{
-					Debug.LogErrorFormat("The pointer for reading data from {1} currently has it's pointer at byte {2} while it was reading the Folder Names And File Record #{3}. " +
-						"It is supposed to be at byte {4}. This could indicate a corrupted file.", _bytesParams.FileStream.Name, _currentPointerPosition, _i + 1, _folderRecords[_i].NameAndFileRecordsOffset);
+					Debug.LogErrorFormat("The pointer for reading data from {0} currently has it's pointer at byte {1} while it was reading the Folder Names And File Record #{2}. " +
+						"It is supposed to be at byte {3}. This could indicate a corrupted file.", _bytesParams.FileStream.Name, _currentPointerPosition, _i + 1, _folderRecords[_i].NameAndFileRecordsOffset);
 					return false;
 				}
 
@@ -267,13 +290,13 @@ namespace BethBryo_for_Unity_Common
 				char[] _bsaStringArr = new char[_folderNameStringLength];
 				for (ushort _j = 0; _j < (_folderNameStringLength - 1); ++_j)
 				{
-					_bsaStringArr[_i] = System.Convert.ToChar(BytesToTypes.BytesToSingleByte8(ref _bytesParams, out _));
+					_bsaStringArr[_j] = System.Convert.ToChar(BytesToTypes.BytesToSingleByte8(ref _bytesParams, out _));
 				}
 				_folderNameAndFileRecords[_i].FolderName = new string(_bsaStringArr);
 				// Last byte in folder's name must be a zero value
 				if (BytesToTypes.BytesToSingleByte8(ref _bytesParams, out _) != 0)
 				{
-					Debug.LogErrorFormat("{1}'s folder name \"{2}\" did not end with a zero value. This could indicate a corrupted file.",
+					Debug.LogErrorFormat("{0}'s folder name \"{1}\" did not end with a zero value. This could indicate a corrupted file.",
 						_bytesParams.FileStream.Name, _folderNameAndFileRecords[_i].FolderName);
 					return false;
 				}
@@ -301,17 +324,26 @@ namespace BethBryo_for_Unity_Common
 					}
 
 					// Finally, get the size of the File Block. This size is the size of the raw file data as well as the uncompressed size UInt32 bytes.
-					_folderNameAndFileRecords[_i].FileRecords[_j].FileSize = _tempFileSize;
+					_folderNameAndFileRecords[_i].FileRecords[_j].FileSize = (int)_tempFileSize;
 
 					// Offset to the file's raw data from the start of the BSA.
 					_folderNameAndFileRecords[_i].FileRecords[_j].FileDataOffset = BytesToTypes.BytesToUInt32(ref _bytesParams, out _);
+
+					++_fileCount;
+					if (_fileCount > _bsaHeader.TotalFileCount)
+					{
+						Debug.LogErrorFormat("More files than expected have been read from {0}. According to the header, {1} files were expected. {2} files have been read so far," +
+							" with {3} more expected in this loop. This could indicate a corrupted file.", 
+							_bytesParams.FileStream.Name, _bsaHeader.TotalFileCount, _fileCount, _folderRecords[_i].FoldersFileCount - _j);
+						return false;
+					}
 				}
 			}
 
 			if (_countedLengthOfFolderNames != _bsaHeader.TotalLengthAllFolderNames)
 			{
-				Debug.LogErrorFormat("{1}'s Total Folder Name Length given in header ({2}) does not match up with the lengths counted for all folder names in the Folder Names And File " +
-					"Records ({3}). This could indicate a corrupted file.", _bytesParams.FileStream.Name, _bsaHeader.TotalLengthAllFolderNames, _countedLengthOfFolderNames);
+				Debug.LogErrorFormat("{0}'s Total Folder Name Length given in header ({1}) does not match up with the lengths counted for all folder names in the Folder Names And File " +
+					"Records ({2}). This could indicate a corrupted file.", _bytesParams.FileStream.Name, _bsaHeader.TotalLengthAllFolderNames, _countedLengthOfFolderNames);
 				return false;
 			}
 
@@ -385,19 +417,20 @@ namespace BethBryo_for_Unity_Common
 
 			if (_countedLengthOfFileNames != _bsaHeader.TotalLengthAllFileNames)
 			{
-				Debug.LogErrorFormat("{1}'s Total Folder Name Length given in header ({2}) does not match up with the lengths counted for all folder names in the Folder Names And File " +
-					"Records ({3}). This could indicate a corrupted file.", _bytesParams.FileStream.Name, _bsaHeader.TotalLengthAllFolderNames, _countedLengthOfFolderNames);
+				Debug.LogErrorFormat("{0}'s Total Folder Name Length given in header ({1}) does not match up with the lengths counted for all folder names in the Folder Names And File " +
+					"Records ({2}). This could indicate a corrupted file.", _bytesParams.FileStream.Name, _bsaHeader.TotalLengthAllFolderNames, _countedLengthOfFolderNames);
 				return false;
 			}
 
 			_currentPointerPosition = _bytesParams.FileStream.Position - 4096 + _bytesParams.CacheCurrentPos;
 			if (_currentPointerPosition != _folderNameAndFileRecords[0].FileRecords[0].FileDataOffset)
 			{
-				Debug.LogErrorFormat("The pointer for reading data from {1} currently has it's pointer at byte {2} after it finished reading the File Name Block. It is supposed to be at " +
-					"byte {3}. This could indicate a corrupted file.", _bytesParams.FileStream.Name, _currentPointerPosition, _folderNameAndFileRecords[0].FileRecords[0].FileDataOffset);
+				Debug.LogErrorFormat("The pointer for reading data from {0} currently has it's pointer at byte {1} after it finished reading the File Name Block. It is supposed to be at " +
+					"byte {2}. This could indicate a corrupted file.", _bytesParams.FileStream.Name, _currentPointerPosition, _folderNameAndFileRecords[0].FileRecords[0].FileDataOffset);
 				return false;
 			}
 
+			Debug.LogFormat("Finished extracting header from {0}", _bytesParams.FileStream.Name);
 			return true;
 		}
 	}
