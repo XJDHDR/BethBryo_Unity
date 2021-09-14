@@ -15,7 +15,7 @@ namespace BethBryo_for_Unity_Common
 		public FileStream FileStream;
 		/// <summary>An empty byte array which has been initialised with an index size of exactly 4096 that will persist for the life of the FileStream. This holds the cached FileStream data.</summary>
 		public byte[] StreamCache;
-		/// <summary>A signed integer that will persist for the life of the FileStream. Indicates the position of the BytesToTypes' pointer. If you move the FileStream's pointer manually, you should move this pointer by the same amount.</param>
+		/// <summary>A signed integer that will persist for the life of the FileStream. Indicates the position of the BytesToTypes cache pointer. If you move the FileStream's pointer manually, you should move this pointer by the same amount.</summary>
 		public int CacheCurrentPos;
 	}
 
@@ -30,7 +30,7 @@ namespace BethBryo_for_Unity_Common
 		/// Initialisation is done by calling this function like so: RefillBytesArray({FileStream}, ref {byte[]}, ref {int} = 4096)
 		/// </summary>
 		/// <param name="BytesParams">A BytesParams Struct filled with the data required by all the FileStream caching methods.</param>
-		/// <returns>Returns a signed integer with the number of bytes that were read from the FileStream.</returns>
+		/// <returns>Number of bytes that were read from the FileStream.</returns>
 		internal static int RefillBytesArray(ref BytesParams BytesParams)
 		{
 			BytesParams.FileStream.Position -= 4096 - BytesParams.CacheCurrentPos;
@@ -43,7 +43,7 @@ namespace BethBryo_for_Unity_Common
 		/// </summary>
 		/// <param name="BytesParams">A BytesParams Struct filled with the data required by all the FileStream caching methods.</param>
 		/// <param name="NumBytesRead">Returns the number of bytes read from the FileStream while re-filling the byte array cache. Or -1 if the cache didn't need refilling.</param>
-		/// <returns>Returns an unsigned 8-bit integer read from the byte array.</returns>
+		/// <returns>Unsigned 8-bit integer read from the byte array.</returns>
 		internal static byte BytesToSingleByte8(ref BytesParams BytesParams, out int NumBytesRead)
 		{
 			NumBytesRead = -1;
@@ -60,7 +60,7 @@ namespace BethBryo_for_Unity_Common
 		/// </summary>
 		/// <param name="BytesParams">A BytesParams Struct filled with the data required by all the FileStream caching methods.</param>
 		/// <param name="NumBytesRead">Returns the number of bytes read from the FileStream while re-filling the byte array cache. Or -1 if the cache didn't need refilling.</param>
-		/// <returns>Returns a signed 8-bit integer read from the byte array.</returns>
+		/// <returns>Signed 8-bit integer read from the byte array.</returns>
 		internal static sbyte BytesToSingleSByte8(ref BytesParams BytesParams, out int NumBytesRead)
 		{
 			NumBytesRead = -1;
@@ -78,8 +78,8 @@ namespace BethBryo_for_Unity_Common
 		/// <param name="BytesParams">A BytesParams Struct filled with the data required by all the FileStream caching methods.</param>
 		/// <param name="NumBytesRead">Returns the number of bytes read from the FileStream while re-filling the byte array cache. Or -1 if the cache didn't need refilling.</param>
 		/// <param name="ReverseEndianess">Optional boolean that you can set to True to return the bytes read from the array with Endianess reversed. 
-		/// i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa.</param>
-		/// <returns>Returns a signed 16-bit integer read from the byte array.</returns>
+		/// (i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa)</param>
+		/// <returns>Signed 16-bit integer read from the byte array.</returns>
 		internal static short BytesToShort16(ref BytesParams BytesParams, out int NumBytesRead, bool ReverseEndianess = false)
 		{
 			NumBytesRead = -1;
@@ -109,8 +109,8 @@ namespace BethBryo_for_Unity_Common
 		/// <param name="BytesParams">A BytesParams Struct filled with the data required by all the FileStream caching methods.</param>
 		/// <param name="NumBytesRead">Returns the number of bytes read from the FileStream while re-filling the byte array cache. Or -1 if the cache didn't need refilling.</param>
 		/// <param name="ReverseEndianess">Optional boolean that you can set to True to return the bytes read from the array with Endianess reversed. 
-		/// i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa.</param>
-		/// <returns>Returns an unsigned 16-bit integer read from the byte array.</returns>
+		/// (i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa)</param>
+		/// <returns>Unsigned 16-bit integer read from the byte array.</returns>
 		internal static ushort BytesToUShort16(ref BytesParams BytesParams, out int NumBytesRead, bool ReverseEndianess = false)
 		{
 			NumBytesRead = -1;
@@ -140,8 +140,8 @@ namespace BethBryo_for_Unity_Common
 		/// <param name="BytesParams">A BytesParams Struct filled with the data required by all the FileStream caching methods.</param>
 		/// <param name="NumBytesRead">Returns the number of bytes read from the FileStream while re-filling the byte array cache. Or -1 if the cache didn't need refilling.</param>
 		/// <param name="ReverseEndianess">Optional boolean that you can set to True to return the bytes read from the array with Endianess reversed. 
-		/// i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa.</param>
-		/// <returns>Returns a Unicode char read from the byte array.</returns>
+		/// (i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa)</param>
+		/// <returns>Unicode char read from the byte array.</returns>
 		internal static char BytesToChar(ref BytesParams BytesParams, out int NumBytesRead, bool ReverseEndianess = false)
 		{
 			NumBytesRead = -1;
@@ -171,8 +171,8 @@ namespace BethBryo_for_Unity_Common
 		/// <param name="BytesParams">A BytesParams Struct filled with the data required by all the FileStream caching methods.</param>
 		/// <param name="NumBytesRead">Returns the number of bytes read from the FileStream while re-filling the byte array cache. Or -1 if the cache didn't need refilling.</param>
 		/// <param name="ReverseEndianess">Optional boolean that you can set to True to return the bytes read from the array with Endianess reversed. 
-		/// i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa.</param>
-		/// <returns>Returns a signed 32-bit integer read from the byte array.</returns>
+		/// (i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa)</param>
+		/// <returns>Signed 32-bit integer read from the byte array.</returns>
 		internal static int BytesToInt32(ref BytesParams BytesParams, out int NumBytesRead, bool ReverseEndianess = false)
 		{
 			NumBytesRead = -1;
@@ -204,8 +204,8 @@ namespace BethBryo_for_Unity_Common
 		/// <param name="BytesParams">A BytesParams Struct filled with the data required by all the FileStream caching methods.</param>
 		/// <param name="NumBytesRead">Returns the number of bytes read from the FileStream while re-filling the byte array cache. Or -1 if the cache didn't need refilling.</param>
 		/// <param name="ReverseEndianess">Optional boolean that you can set to True to return the bytes read from the array with Endianess reversed. 
-		/// i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa.</param>
-		/// <returns>Returns an unsigned 32-bit integer read from the byte array.</returns>
+		/// (i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa)</param>
+		/// <returns>Unsigned 32-bit integer read from the byte array.</returns>
 		internal static uint BytesToUInt32(ref BytesParams BytesParams, out int NumBytesRead, bool ReverseEndianess = false)
 		{
 			NumBytesRead = -1;
@@ -237,8 +237,8 @@ namespace BethBryo_for_Unity_Common
 		/// <param name="BytesParams">A BytesParams Struct filled with the data required by all the FileStream caching methods.</param>
 		/// <param name="NumBytesRead">Returns the number of bytes read from the FileStream while re-filling the byte array cache. Or -1 if the cache didn't need refilling.</param>
 		/// <param name="ReverseEndianess">Optional boolean that you can set to True to return the bytes read from the array with Endianess reversed. 
-		/// i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa.</param>
-		/// <returns>Returns a single precision float read from the byte array.</returns>
+		/// (i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa)</param>
+		/// <returns>Single precision float read from the byte array.</returns>
 		internal static float BytesToSingleFloat(ref BytesParams BytesParams, out int NumBytesRead, bool ReverseEndianess = false)
 		{
 			NumBytesRead = -1;
@@ -270,8 +270,8 @@ namespace BethBryo_for_Unity_Common
 		/// <param name="BytesParams">A BytesParams Struct filled with the data required by all the FileStream caching methods.</param>
 		/// <param name="NumBytesRead">Returns the number of bytes read from the FileStream while re-filling the byte array cache. Or -1 if the cache didn't need refilling.</param>
 		/// <param name="ReverseEndianess">Optional boolean that you can set to True to return the bytes read from the array with Endianess reversed. 
-		/// i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa.</param>
-		/// <returns>Returns a signed 64-bit integer read from the byte array.</returns>
+		/// (i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa)</param>
+		/// <returns>Signed 64-bit integer read from the byte array.</returns>
 		internal static long BytesToLong64(ref BytesParams BytesParams, out int NumBytesRead, bool ReverseEndianess = false)
 		{
 			NumBytesRead = -1;
@@ -307,8 +307,8 @@ namespace BethBryo_for_Unity_Common
 		/// <param name="BytesParams">A BytesParams Struct filled with the data required by all the FileStream caching methods.</param>
 		/// <param name="NumBytesRead">Returns the number of bytes read from the FileStream while re-filling the byte array cache. Or -1 if the cache didn't need refilling.</param>
 		/// <param name="ReverseEndianess">Optional boolean that you can set to True to return the bytes read from the array with Endianess reversed. 
-		/// i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa.</param>
-		/// <returns>Returns an unsigned 64-bit integer read from the byte array.</returns>
+		/// (i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa)</param>
+		/// <returns>Unsigned 64-bit integer read from the byte array.</returns>
 		internal static ulong BytesToULong64(ref BytesParams BytesParams, out int NumBytesRead, bool ReverseEndianess = false)
 		{
 			NumBytesRead = -1;
@@ -344,8 +344,8 @@ namespace BethBryo_for_Unity_Common
 		/// <param name="BytesParams">A BytesParams Struct filled with the data required by all the FileStream caching methods.</param>
 		/// <param name="NumBytesRead">Returns the number of bytes read from the FileStream while re-filling the byte array cache. Or -1 if the cache didn't need refilling.</param>
 		/// <param name="ReverseEndianess">Optional boolean that you can set to True to return the bytes read from the array with Endianess reversed. 
-		/// i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa.</param>
-		/// <returns>Returns a double precision float read from the byte array.</returns>
+		/// (i.e. convert a Big-Endian FileStream into a Little-Endian integer or vice versa)</param>
+		/// <returns>Double precision float read from the byte array.</returns>
 		internal static double BytesToDoubleFloat(ref BytesParams BytesParams, out int NumBytesRead, bool ReverseEndianess = false)
 		{
 			NumBytesRead = -1;

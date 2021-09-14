@@ -3,6 +3,13 @@
 
 namespace BethBryo_for_Unity_Common
 {
+	public enum DebugLevel : byte
+	{
+		ErrorsAndWarningsOnly	= 0,
+		Info					= 1,
+		Debug					= 2
+	}
+
 	internal enum SupportedGames : byte
 	{
 		NoGame		= 0,
