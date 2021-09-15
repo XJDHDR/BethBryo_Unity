@@ -90,7 +90,7 @@ namespace BethBryo_for_Unity_Common
 					{
 						if (_readBsaFolderRecords(BsaHeader, ref _bytesParams, out FolderRecords))
 						{
-							if (! _readBsaFolderNamesAndFileRecords(BsaHeader, FolderRecords, ref _bytesParams, out FolderNameAndFileRecords))
+							if (!_readBsaFolderNamesAndFileRecords(BsaHeader, FolderRecords, ref _bytesParams, out FolderNameAndFileRecords))
 							{
 								return false;
 							}
@@ -123,7 +123,7 @@ namespace BethBryo_for_Unity_Common
 
 			// Read first 4 bytes of file and determine if those bytes are valid (it is "BSA " for every BethBryo BSA).
 			char[] _bsaStringArr = new char[4];
-			for (ushort _i = 0; _i < 4; ++_i)
+			for (byte _i = 0; _i < 4; ++_i)
 			{
 				byte _readByte = BytesToTypes.BytesToSingleByte8(ref _bytesParams, out _);
 				if (_readByte != 0)
