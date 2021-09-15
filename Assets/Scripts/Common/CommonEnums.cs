@@ -10,7 +10,7 @@ namespace BethBryo_for_Unity_Common
 		Debug					= 2
 	}
 
-	internal enum SupportedGames : byte
+	public enum SupportedGames : byte
 	{
 		NoGame		= 0,
 		Morrowind	= 1,
