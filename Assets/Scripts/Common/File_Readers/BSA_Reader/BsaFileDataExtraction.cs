@@ -1,5 +1,8 @@
 ﻿// The license for this source code may be found here:
 // https://github.com/XJDHDR/BethBryo_for_Unity/blob/main/LICENSE
+//
+// The code in this file was mainly written thanks to the BSA file format specification found on the UESP:
+// https://en.uesp.net/wiki/Oblivion_Mod:BSA_File_Format
 
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using System.Collections.Generic;
