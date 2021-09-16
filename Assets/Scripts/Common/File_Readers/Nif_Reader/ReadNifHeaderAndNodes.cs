@@ -158,11 +158,17 @@ namespace BethBryo_for_Unity_Common
 			if ((_nifVersionMajor > 20) || (_nifVersionMajor == 20 && _nifVersionMinor > 0) || (_nifVersionMajor == 20 && _nifVersionMinor == 0 && _nifVersionBuild > 0) ||
 				(_nifVersionMajor == 20 && _nifVersionMinor == 0 && _nifVersionBuild == 0 && _nifVersionPrivate >= 3))
 			{
-				if (NifData[_curArrayPos] == 0x00)		// 0x01 = Little endian. 0x00 = Big endian.
+				if (NifData[_curArrayPos] == 0x00)		// 0x00 = Big endian.
 				{
 					Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
 						"The endianess bit is set to 0.\n" +
 						"This could indicate either a corrupt file or that this model was extracted from the Xbox 360 or PS3 version of the game, neither of which are supported.");
+					return false;
+				}
+				else if (NifData[_curArrayPos] != 0x01)	// 0x01 = Little endian.
+				{
+					Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
+						"The endianess bit is not set to either 0 or 1. This could indicate a corrupt file.");
 					return false;
 				}
 				_curArrayPos += 1;
@@ -177,6 +183,19 @@ namespace BethBryo_for_Unity_Common
 				_userVersion = BitConverter.ToUInt32(NifData, _curArrayPos);
 				_curArrayPos += 4;
 			}
+
+			// Next, Nif versions from 3.1.0.1 and up will have the number of file objects as a 32-bit integer.
+			uint? _numberOfObjects = null;
+			if ((_nifVersionMajor > 3) || (_nifVersionMajor == 3 && _nifVersionMinor > 1) || (_nifVersionMajor == 3 && _nifVersionMinor == 1 && _nifVersionBuild > 0) ||
+				(_nifVersionMajor == 3 && _nifVersionMinor == 1 && _nifVersionBuild == 0 && _nifVersionPrivate >= 1))
+			{
+				_numberOfObjects = BitConverter.ToUInt32(NifData, _curArrayPos);
+				_curArrayPos += 1;
+			}
+
+
+
+
 
 
 
