@@ -29,22 +29,29 @@ namespace BethBryo_for_Unity_Common
 			// Next, we have the name of the block being read. This will be either a string if 20.0.0.5 or less, or an index in the string array if 20.1.0.3 or greater.
 			if (NifHeaderData.NifVersionCombined <= 0x14000005)			// If less than or equal to 20.0.0.5
 			{
-				uint _stringLength = BitConverter.ToUInt32(NifData, CurArrayPos);
-				CurArrayPos += 4;
-
-				char[] _stringChars = new char[_stringLength];
-				for (uint _i = 0; _i < _stringLength; ++_i)
-				{
-					_stringChars[_i] = Convert.ToChar(NifData[CurArrayPos]);
-					CurArrayPos += 1;
-				}
-				string _blockName = _stringChars.ToString();
+				FileNifCommonMethods.ReadSizedString(NifData, ref CurArrayPos, out string _blockName);
 			}
 			else if (NifHeaderData.NifVersionCombined >= 0x14010003)    // If greater than or equal to 20.1.0.3
 			{
 				uint _stringLength = BitConverter.ToUInt32(NifData, CurArrayPos);
 				CurArrayPos += 4;
 			}
+
+			// Next, there is a block of Legacy Extra Data if the version is up to 2.3.0.0
+			if (NifHeaderData.NifVersionCombined <= 0x02030000)         // If less than or equal to 2.3.0.0
+			{
+				// First is a boolean that indicates if there is any other extra data present.
+				// For these Nif versions, it is a 32-bit number that is equal to either 0 or 1.
+				uint _isThereExtraDataPresent = BitConverter.ToUInt32(NifData, CurArrayPos);
+				CurArrayPos += 4;
+
+				if (_isThereExtraDataPresent == 1)
+				{
+					FileNifCommonMethods.ReadSizedString(NifData, ref CurArrayPos, out string _extraPropName);
+
+				}
+			}
+
 
 			return true;
 		}
