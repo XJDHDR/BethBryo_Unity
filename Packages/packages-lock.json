@@ -1,20 +1,5 @@
 {
   "dependencies": {
-    "com.havok.physics": {
-      "version": "0.6.0-preview.3",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.burst": "1.4.1",
-        "com.unity.collections": "0.15.0-preview.21",
-        "com.unity.entities": "0.17.0-preview.41",
-        "com.unity.jobs": "0.8.0-preview.23",
-        "com.unity.mathematics": "1.2.1",
-        "com.unity.physics": "0.6.0-preview.3",
-        "com.unity.test-framework": "1.1.11"
-      },
-      "url": "https://packages.unity.com"
-    },
     "com.unity.addressables": {
       "version": "1.18.15",
       "depth": 0,
@@ -47,7 +32,7 @@
     },
     "com.unity.collections": {
       "version": "0.15.0-preview.21",
-      "depth": 1,
+      "depth": 2,
       "source": "registry",
       "dependencies": {
         "com.unity.test-framework.performance": "2.3.1-preview",
@@ -124,7 +109,7 @@
     },
     "com.unity.mathematics": {
       "version": "1.2.1",
-      "depth": 1,
+      "depth": 2,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -155,23 +140,6 @@
       "depth": 2,
       "source": "registry",
       "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.physics": {
-      "version": "0.6.0-preview.3",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.burst": "1.4.1",
-        "com.unity.collections": "0.15.0-preview.21",
-        "com.unity.entities": "0.17.0-preview.41",
-        "com.unity.jobs": "0.8.0-preview.23",
-        "com.unity.mathematics": "1.2.1",
-        "com.unity.test-framework": "1.1.11",
-        "com.unity.test-framework.performance": "2.3.1-preview",
-        "com.unity.modules.imgui": "1.0.0",
-        "com.unity.modules.jsonserialize": "1.0.0"
-      },
       "url": "https://packages.unity.com"
     },
     "com.unity.platforms": {

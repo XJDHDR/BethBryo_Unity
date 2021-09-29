@@ -5,6 +5,7 @@
 // https://github.com/niftools/nifxml/
 
 using System;
+using UnityEngine;
 
 namespace BethBryo_for_Unity_Common
 {
@@ -49,6 +50,13 @@ namespace BethBryo_for_Unity_Common
 				{
 					FileNifCommonMethods.ReadSizedString(NifData, ref CurArrayPos, out string _extraPropName);
 
+				}
+				else if (_isThereExtraDataPresent != 0)
+				{
+					Debug.LogErrorFormat("Error while reading Nif file: " + /*NifLocation +*/ "\n" +
+						"The Extra Data boolean in the NiObjectNET of the Nth block is not equal to 0 or 1.\n" +
+						"This could indicate a corrupt file.");
+					return false;
 				}
 			}
 
