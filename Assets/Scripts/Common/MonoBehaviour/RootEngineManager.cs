@@ -16,14 +16,14 @@ namespace BethBryo_for_Unity_Common
 		// Domain reloading is disabled: https://docs.unity3d.com/Manual/DomainReloading.html
 		// Thus, we need this to reset the above static variables in editor mode.
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-		static void _resetStaicVars()
+		static void _resetStaticVars()
 		{
 			_startupIsDone = false;
 			_postStartupIsDone = null;
 		}
 
 
-		// Sneaky Unity engine hack. From what I've read, Unity doesn't run any of it's startup or Update methods while the "Powered by Unity" splash screen is running.
+		// Sneaky Unity engine hack. From what I've read, Unity doesn't run any of it's startup or update methods while the "Powered by Unity" splash screen is running.
 		// However, it will run the constructor for any objects initially attached to the starting scene: https://gamedev.stackexchange.com/a/141402
 		// 
 		// My own testing seems to confirm this. In a test build version, this object's constructor ran 2.6 seconds before the Awake() or OnEnable() methods were called
@@ -33,7 +33,7 @@ namespace BethBryo_for_Unity_Common
 		RootEngineManager()
 		{
 			// This code runs when the constructor is executed. This is only enabled for built versions because the editor doesn't run the constructor when expected. 
-			// Instead, Unity says that it runs every time the script is recompiled. I've seen it run on exiting play mode. Some have also seen it run twice on entering play mode: 
+			// Instead, Unity says that it runs every time the script is recompiled. I've seen it run on exiting play mode. Some have also seen it run on entering play mode: 
 			// https://ilkinulas.github.io/development/unity/2016/05/30/monobehaviour-constructor.html
 			_startupCode();
 		}
@@ -59,6 +59,11 @@ namespace BethBryo_for_Unity_Common
 			{
 				_postStartupCode();
 			}
+
+
+
+			// Finally, check if any new log messages need to be printed.
+			LoggingHelper.PrintAllCurrentLogs();
 		}
 #pragma warning restore IDE1006 // Naming Styles
 #pragma warning restore IDE0051 // Remove unused private members

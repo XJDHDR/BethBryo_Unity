@@ -5,7 +5,6 @@
 // https://github.com/niftools/nifxml/
 
 using System;
-using UnityEngine;
 
 namespace BethBryo_for_Unity_Common
 {
@@ -53,9 +52,13 @@ namespace BethBryo_for_Unity_Common
 				}
 				else if (_isThereExtraDataPresent != 0)
 				{
-					Debug.LogErrorFormat("Error while reading Nif file: " + /*NifLocation +*/ "\n" +
-						"The Extra Data boolean in the NiObjectNET of the Nth block is not equal to 0 or 1.\n" +
-						"This could indicate a corrupt file.");
+					LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+					{
+						LogSeverity = LoggingHelper.LogSeverityValue.Error,
+						LogMessage = "Error while reading Nif file: " + /*NifLocation +*/ "\n" +
+							"The Extra Data boolean in the NiObjectNET of the Nth block is not equal to 0 or 1.\n" +
+							"This could indicate a corrupt file."
+					});
 					return false;
 				}
 			}
