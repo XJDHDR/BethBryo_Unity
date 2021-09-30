@@ -6,9 +6,9 @@
 
 namespace BethBryo_for_Unity_Common
 {
-	internal class NiAVObject
+	internal static class NiAVObject
 	{
-		internal static bool ReadNiAVObject(byte[] NifData, NifHeaderData NifHeaderData, uint BlockNumber, ref int CurArrayPos)
+		internal static bool ReadNiAVObject(byte[] NifData, FileNifStructs.NifHeaderData NifHeaderData, uint BlockNumber, ref int CurArrayPos)
 		{
 			// An NiAVObject's data is preceded by NiObjectNET data
 			if (NiObjectNET.ReadNiObjectNET(NifData, NifHeaderData, BlockNumber, ref CurArrayPos) == false)

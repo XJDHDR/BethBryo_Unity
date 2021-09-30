@@ -8,9 +8,9 @@ using System;
 
 namespace BethBryo_for_Unity_Common
 {
-	internal class NiObjectNET
+	internal static class NiObjectNET
 	{
-		internal static bool ReadNiObjectNET(byte[] NifData, NifHeaderData NifHeaderData, uint BlockNumber, ref int CurArrayPos)
+		internal static bool ReadNiObjectNET(byte[] NifData, FileNifStructs.NifHeaderData NifHeaderData, uint BlockNumber, ref int CurArrayPos)
 		{
 			// The first thing that might be contained in a NiObjectNET block is a BSLightingShaderType value. 
 			// This is only the case if the parent block is a BSLightingShaderProperty, Nif version is 20.2.0.7 and the BS Version is between 83 and 130.
@@ -20,7 +20,7 @@ namespace BethBryo_for_Unity_Common
 				{
 					if ((NifHeaderData.BSVersion >= 83) && (NifHeaderData.BSVersion <= 130))
 					{
-						BSLightingShaderType _bSLightingShaderType = (BSLightingShaderType)BitConverter.ToUInt32(NifData, CurArrayPos);
+						FileNifEnums.BSLightingShaderType _bSLightingShaderType = (FileNifEnums.BSLightingShaderType)BitConverter.ToUInt32(NifData, CurArrayPos);
 						CurArrayPos += 4;
 					}
 				}

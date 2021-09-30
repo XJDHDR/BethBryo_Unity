@@ -6,12 +6,12 @@
 
 namespace BethBryo_for_Unity_Common
 {
-	internal class FileNifReader
+	internal static class FileNifReader
 	{
 		public static bool ReadAllNifObjects(byte[] NifData, string NifLocation, SupportedGames CurrentGame)
 		{
 			int _curArrayPos = 0;
-			if (NifHeader.GetNifHeaderAndNodes(NifData, NifLocation, CurrentGame, ref _curArrayPos, out NifHeaderData _nifHeaderData) == false)
+			if (NifHeader.GetNifHeaderAndNodes(NifData, NifLocation, CurrentGame, ref _curArrayPos, out FileNifStructs.NifHeaderData _nifHeaderData) == false)
 				return false;
 
 			if (_nifHeaderData.NumberOfBlocks != null)

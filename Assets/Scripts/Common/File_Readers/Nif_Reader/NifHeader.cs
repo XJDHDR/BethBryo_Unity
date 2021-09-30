@@ -6,15 +6,14 @@
 
 using Force.Crc32;
 using System;
-using UnityEngine;
 
 namespace BethBryo_for_Unity_Common
 {
-	public class NifHeader
+	public static class NifHeader
 	{
-		internal static bool GetNifHeaderAndNodes(byte[] NifData, string NifLocation, SupportedGames CurrentGame, ref int CurArrayPos, out NifHeaderData NifHeaderData)
+		internal static bool GetNifHeaderAndNodes(byte[] NifData, string NifLocation, SupportedGames CurrentGame, ref int CurArrayPos, out FileNifStructs.NifHeaderData NifHeaderData)
 		{
-			NifHeaderData = new NifHeaderData
+			NifHeaderData = new FileNifStructs.NifHeaderData
 			{
 				NifVersionCombined = 0,
 				UserVersion = null,
@@ -33,7 +32,7 @@ namespace BethBryo_for_Unity_Common
 				Groups = new uint[0]
 			};
 
-			// The first bytes are a newline terminated Header String so read bytes until a newline is encountered. Mark that position when it's found.
+			// The first bytes are a newline terminated Header String. Thus, read bytes until the newline is encountered. Mark that position when it's found.
 			// Also, the last space in this string is the position where the NIF version can be found, so mark that position as well.
 			byte _lastSpacePosition = 0;
 			ushort _loopIterations = 0;
@@ -54,9 +53,13 @@ namespace BethBryo_for_Unity_Common
 
 				if (_loopIterations > 250)
 				{
-					Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
-						"Failed to find a newline character while reading it's Header String starting at byte " + _loopStartLocation  + ".\n" +
-						"This could indicate a corrupt file.");
+					LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+					{
+						LogSeverity = LoggingHelper.LogSeverityValue.Error,
+						LogMessage = "Error while reading Nif file: " + NifLocation + "\n" +
+						"Failed to find a newline character while reading it's Header String starting at byte " + _loopStartLocation + ".\n" +
+						"This could indicate a corrupt file."
+					});
 					return false;
 				}
 			}
@@ -89,9 +92,13 @@ namespace BethBryo_for_Unity_Common
 			{
 				if (_headerTextSubString != "NetImmerse File Format, Version")
 				{
-					Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
+					LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+					{
+						LogSeverity = LoggingHelper.LogSeverityValue.Error,
+						LogMessage = "Error while reading Nif file: " + NifLocation + "\n" +
 						"It's Header String is supposed to say \"NetImmerse File Format, Version\" but instead, it says: \"" + _headerTextSubString + "\".\n" +
-						"This could indicate a corrupt file.");
+						"This could indicate a corrupt file."
+					});
 					return false;
 				}
 			}
@@ -99,9 +106,13 @@ namespace BethBryo_for_Unity_Common
 			{
 				if (_headerTextSubString != "Gamebryo File Format, Version")
 				{
-					Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
+					LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+					{
+						LogSeverity = LoggingHelper.LogSeverityValue.Error,
+						LogMessage = "Error while reading Nif file: " + NifLocation + "\n" +
 						"It's Header String is supposed to say \"Gamebryo File Format, Version\" but instead, it says: \"" + _headerTextSubString + "\".\n" +
-						"This could indicate a corrupt file.");
+						"This could indicate a corrupt file."
+					});
 					return false;
 				}
 			}
@@ -123,9 +134,13 @@ namespace BethBryo_for_Unity_Common
 
 					if (CurArrayPos > 65500)
 					{
-						Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
+						LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+						{
+							LogSeverity = LoggingHelper.LogSeverityValue.Error,
+							LogMessage = "Error while reading Nif file: " + NifLocation + "\n" +
 							"Failed to find a newline character while reading it's Copyright string starting at byte " + _loopStartLocation + ".\n" +
-							"This could indicate a corrupt file.");
+							"This could indicate a corrupt file."
+						});
 						return false;
 					}
 				}
@@ -137,37 +152,53 @@ namespace BethBryo_for_Unity_Common
 			{
 				if (NifData[CurArrayPos] != _nifVersionPrivate)
 				{
-					Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
+					LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+					{
+						LogSeverity = LoggingHelper.LogSeverityValue.Error,
+						LogMessage = "Error while reading Nif file: " + NifLocation + "\n" +
 						"The Private Version read from the header string at byte " + CurArrayPos + " does not match the Private Version read from the Version hex block.\n" +
 						"The Header says it's \"" + _nifVersionPrivate + "\" but the Version block says it's \"" + NifData[CurArrayPos] + "\"\n" +
-						"This could indicate a corrupt file.");
+						"This could indicate a corrupt file."
+					});
 					return false;
 				}
 				CurArrayPos += 1;
 				if (NifData[CurArrayPos] != _nifVersionBuild)
 				{
-					Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
+					LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+					{
+						LogSeverity = LoggingHelper.LogSeverityValue.Error,
+						LogMessage = "Error while reading Nif file: " + NifLocation + "\n" +
 						"The Build Version read from the header string at byte " + CurArrayPos + " does not match the Build Version read from the Version hex block.\n" +
 						"The Header says it's \"" + _nifVersionBuild + "\" but the Version block says it's \"" + NifData[CurArrayPos] + "\"\n" +
-						"This could indicate a corrupt file.");
+						"This could indicate a corrupt file."
+					});
 					return false;
 				}
 				CurArrayPos += 1;
 				if (NifData[CurArrayPos] != _nifVersionMinor)
 				{
-					Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
+					LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+					{
+						LogSeverity = LoggingHelper.LogSeverityValue.Error,
+						LogMessage = "Error while reading Nif file: " + NifLocation + "\n" +
 						"The Minor Version read from the header string at byte " + CurArrayPos + " does not match the Minor Version read from the Version hex block.\n" +
 						"The Header says it's \"" + _nifVersionMinor + "\" but the Version block says it's \"" + NifData[CurArrayPos] + "\"\n" +
-						"This could indicate a corrupt file.");
+						"This could indicate a corrupt file."
+					});
 					return false;
 				}
 				CurArrayPos += 1;
 				if (NifData[CurArrayPos] != _nifVersionMajor)
 				{
-					Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
+					LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+					{
+						LogSeverity = LoggingHelper.LogSeverityValue.Error,
+						LogMessage = "Error while reading Nif file: " + NifLocation + "\n" +
 						"The Major Version read from the header string at byte " + CurArrayPos + " does not match the Major Version read from the Version hex block.\n" +
 						"The Header says it's \"" + _nifVersionMajor + "\" but the Version block says it's \"" + NifData[CurArrayPos] + "\"\n" +
-						"This could indicate a corrupt file.");
+						"This could indicate a corrupt file."
+					});
 					return false;
 				}
 				CurArrayPos += 1;
@@ -179,15 +210,23 @@ namespace BethBryo_for_Unity_Common
 			{
 				if (NifData[CurArrayPos] == 0x00)		// 0x00 = Big endian.
 				{
-					Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
+					LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+					{
+						LogSeverity = LoggingHelper.LogSeverityValue.Error,
+						LogMessage = "Error while reading Nif file: " + NifLocation + "\n" +
 						"The endianess bit at byte " + CurArrayPos + " is set to 0.\n" +
-						"This could indicate either a corrupt file or that this model was extracted from the Xbox 360 or PS3 version of the game, neither of which are currently supported.");
+						"This could indicate either a corrupt file or that this model was extracted from the Xbox 360 or PS3 version of the game, neither of which are currently supported."
+					});
 					return false;
 				}
 				else if (NifData[CurArrayPos] != 0x01)	// 0x01 = Little endian.
 				{
-					Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
-						"The endianess bit at byte " + CurArrayPos + " is not set to either 0 or 1. This could indicate a corrupt file.");
+					LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+					{
+						LogSeverity = LoggingHelper.LogSeverityValue.Error,
+						LogMessage = "Error while reading Nif file: " + NifLocation + "\n" +
+						"The endianess bit at byte " + CurArrayPos + " is not set to either 0 or 1. This could indicate a corrupt file."
+					});
 					return false;
 				}
 				CurArrayPos += 1;
@@ -307,9 +346,13 @@ namespace BethBryo_for_Unity_Common
 
 					if (_stringLength > NifHeaderData.StringsMaxLength)
 					{
-						Debug.LogErrorFormat("Error while reading Nif file: " + NifLocation + "\n" +
+						LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+						{
+							LogSeverity = LoggingHelper.LogSeverityValue.Error,
+							LogMessage = "Error while reading Nif file: " + NifLocation + "\n" +
 							"While reading the Strings array, the string length at " + _loopStartLocation + " (" + _stringLength + ") is greater than the read " +
-							"Max String Length value (" + NifHeaderData.StringsMaxLength + ").\n" + "This could indicate a corrupt file.");
+							"Max String Length value (" + NifHeaderData.StringsMaxLength + ").\n" + "This could indicate a corrupt file."
+						});
 						return false;
 					}
 
@@ -385,9 +428,13 @@ namespace BethBryo_for_Unity_Common
 			}
 			else
 			{
-				Debug.LogErrorFormat("Error while reading Nif file: " + _nifLocation + "\n" +
+				LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+				{
+					LogSeverity = LoggingHelper.LogSeverityValue.Error,
+					LogMessage = "Error while reading Nif file: " + _nifLocation + "\n" +
 					"While skipping over the author's name, a null was expected at byte " + _curArrayPos + " but " + _nifData[_curArrayPos] + " was read instead.\n" +
-					"This could indicate a corrupt file.");
+					"This could indicate a corrupt file."
+				});
 				return false;
 			}
 
@@ -406,9 +453,13 @@ namespace BethBryo_for_Unity_Common
 			}
 			else
 			{
-				Debug.LogErrorFormat("Error while reading Nif file: " + _nifLocation + "\n" +
+				LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+				{
+					LogSeverity = LoggingHelper.LogSeverityValue.Error,
+					LogMessage = "Error while reading Nif file: " + _nifLocation + "\n" +
 					"While skipping over the Processing Script's name, a null was expected at byte " + _curArrayPos + " but " + _nifData[_curArrayPos] + " was read instead.\n" +
-					"This could indicate a corrupt file.");
+					"This could indicate a corrupt file."
+				});
 				return false;
 			}
 
@@ -421,9 +472,13 @@ namespace BethBryo_for_Unity_Common
 			}
 			else
 			{
-				Debug.LogErrorFormat("Error while reading Nif file: " + _nifLocation + "\n" +
+				LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+				{
+					LogSeverity = LoggingHelper.LogSeverityValue.Error,
+					LogMessage = "Error while reading Nif file: " + _nifLocation + "\n" +
 					"While skipping over the Export Script's name, a null was expected at byte " + _curArrayPos + " but " + _nifData[_curArrayPos] + " was read instead.\n" +
-					"This could indicate a corrupt file.");
+					"This could indicate a corrupt file."
+				});
 				return false;
 			}
 
@@ -438,9 +493,13 @@ namespace BethBryo_for_Unity_Common
 				}
 				else
 				{
-					Debug.LogErrorFormat("Error while reading Nif file: " + _nifLocation + "\n" +
+					LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
+					{
+						LogSeverity = LoggingHelper.LogSeverityValue.Error,
+						LogMessage = "Error while reading Nif file: " + _nifLocation + "\n" +
 						"While skipping over the Max Filepath, a null was expected at byte " + _curArrayPos + " but " + _nifData[_curArrayPos] + " was read instead.\n" +
-						"This could indicate a corrupt file.");
+						"This could indicate a corrupt file."
+					});
 					return false;
 				}
 			}
