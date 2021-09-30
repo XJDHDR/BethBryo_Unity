@@ -8,10 +8,18 @@ namespace BethBryo_for_Unity_Common
 {
 	internal static class FileNifReader
 	{
-		public static bool ReadAllNifObjects(byte[] NifData, string NifLocation, SupportedGames CurrentGame)
+		/// <summary>
+		/// Used to initialise the FileStream cache and re-fill it periodically.
+		/// You should call this function once to initialise the class before calling any of the other functions for the first time.
+		/// Initialisation is done by calling this function like so: RefillBytesArray({FileStream}, ref {byte[]}, ref {int} = 4096)
+		/// </summary>
+		/// <param name="NifData">Byte array which holds the contents of the Nif file's bytes.</param>
+		/// <param name="NifLocation">Full path indicating the location of the Nif file.</param>
+		/// <returns>True if the method successfully extracted usable data from the Nif binary data. False otherwise.</returns>
+		public static bool ReadAllNifObjects(byte[] NifData, string NifLocation)
 		{
 			int _curArrayPos = 0;
-			if (NifHeader.GetNifHeaderAndNodes(NifData, NifLocation, CurrentGame, ref _curArrayPos, out FileNifStructs.NifHeaderData _nifHeaderData) == false)
+			if (NifHeader.GetNifHeaderAndNodes(NifData, NifLocation, ref _curArrayPos, out FileNifStructs.NifHeaderData _nifHeaderData) == false)
 				return false;
 
 			if (_nifHeaderData.NumberOfBlocks != null)

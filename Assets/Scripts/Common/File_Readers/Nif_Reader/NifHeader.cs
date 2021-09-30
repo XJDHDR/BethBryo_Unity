@@ -11,7 +11,7 @@ namespace BethBryo_for_Unity_Common
 {
 	public static class NifHeader
 	{
-		internal static bool GetNifHeaderAndNodes(byte[] NifData, string NifLocation, SupportedGames CurrentGame, ref int CurArrayPos, out FileNifStructs.NifHeaderData NifHeaderData)
+		internal static bool GetNifHeaderAndNodes(byte[] NifData, string NifLocation, ref int CurArrayPos, out FileNifStructs.NifHeaderData NifHeaderData)
 		{
 			NifHeaderData = new FileNifStructs.NifHeaderData
 			{

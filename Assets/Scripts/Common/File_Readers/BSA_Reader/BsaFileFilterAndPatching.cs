@@ -106,7 +106,6 @@ namespace BethBryo_for_Unity_Common
 							FileData[FileData.Length - 2]  = 0xFF;
 							FileData[FileData.Length - 1]  = 0xFF;
 							break;
-
 					}
 				}
 			}
