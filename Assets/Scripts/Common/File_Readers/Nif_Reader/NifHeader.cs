@@ -9,8 +9,19 @@ using System;
 
 namespace BethBryo_for_Unity_Common
 {
+	/// <summary>
+	/// Provides methods for reading data from the header of an Nif file.
+	/// </summary>
 	public static class NifHeader
 	{
+		/// <summary>
+		/// Used to read the binary data that makes up the header of an Nif file.
+		/// </summary>
+		/// <param name="NifData">Byte array which holds the contents of the Nif file's bytes.</param>
+		/// <param name="NifLocation">Full path indicating the location of the Nif file.</param>
+		/// <param name="CurArrayPos">The location of the array reading pointer.</param>
+		/// <param name="NifHeaderData">Struct holding all of the relevant header data that was read from the file.</param>
+		/// <returns>True if the method successfully extracted the header data. False otherwise.</returns>
 		internal static bool GetNifHeaderAndNodes(byte[] NifData, string NifLocation, ref int CurArrayPos, out FileNifStructs.NifHeaderData NifHeaderData)
 		{
 			NifHeaderData = new FileNifStructs.NifHeaderData
@@ -255,10 +266,10 @@ namespace BethBryo_for_Unity_Common
 			}
 
 			// Next, Nif versions from 30.0.0.0 up will have some Metadata be the next block of data. This is a byte array.
-			// We don't need this so just skip past all of it
+			// We don't need this so just skip past all of it by reading the length of the array from the first 4 bytes.
 			if (NifHeaderData.NifVersionCombined >= 0x1E000000)		// If greater than or equal to 30.0.0.0
 			{
-				CurArrayPos += NifData[CurArrayPos];
+				CurArrayPos += (int)BitConverter.ToUInt32(NifData, CurArrayPos) + 4;
 			}
 
 			// Next, Nif versions from 5.0.0.1 up will have the number of block types used in this NIF,
@@ -271,23 +282,16 @@ namespace BethBryo_for_Unity_Common
 
 				if (NifHeaderData.NifVersionCombined != 0x14030102)   // If not equal to 20.3.1.2
 				{
-					uint _stringLength;
 					NifHeaderData.BlockTypesListCRC32Hashes = new uint[(int)NifHeaderData.BlockTypesQuantity];
 					NifHeaderData.BlockTypesList = new string[(int)NifHeaderData.BlockTypesQuantity];
 					for (ushort _i = 0; _i < NifHeaderData.BlockTypesQuantity; ++_i)
 					{
-						// After that, each block type is an unterminated string prefixed by a 32-bit integer (why?) indicating it's length.
-						_stringLength = BitConverter.ToUInt32(NifData, CurArrayPos);
-						CurArrayPos += 4;
+						_loopStartLocation = CurArrayPos + 4;
 
-						_loopStartLocation = CurArrayPos;
-						_stringChars = new char[_stringLength];
-						for (uint _j = 0; _j < _stringLength; ++_j)
-						{
-							_stringChars[_j] = Convert.ToChar(NifData[CurArrayPos]);
-							CurArrayPos += 1;
-						}
-						NifHeaderData.BlockTypesList[_i] = _stringChars.ToString();
+						// After that, each block type is an unterminated string prefixed by a 32-bit integer (why?) indicating it's length.
+						FileNifCommonMethods.ReadSizedString(NifData, ref CurArrayPos, out NifHeaderData.BlockTypesList[_i]);
+
+						// Next, calculate a CRC32 hash of the string for use in checking which block needs to be read in the main reader method.
 						NifHeaderData.BlockTypesListCRC32Hashes[_i] = Crc32Algorithm.Compute(NifData, _loopStartLocation, CurArrayPos);
 					}
 				}
@@ -340,10 +344,8 @@ namespace BethBryo_for_Unity_Common
 				{
 					_loopStartLocation = CurArrayPos;
 
-					// After that, each string is an unterminated string prefixed by a 32-bit integer indicating it's length.
+					// Each string is an unterminated string prefixed by a 32-bit integer indicating it's length. First check if current string's length is more than the max.
 					_stringLength = BitConverter.ToUInt32(NifData, CurArrayPos);
-					CurArrayPos += 4;
-
 					if (_stringLength > NifHeaderData.StringsMaxLength)
 					{
 						LoggingHelper.LogQueue.Push(new LoggingHelper.LoggingData
@@ -356,13 +358,7 @@ namespace BethBryo_for_Unity_Common
 						return false;
 					}
 
-					_stringChars = new char[_stringLength];
-					for (uint _j = 0; _j < _stringLength; ++_j)
-					{
-						_stringChars[_j] = Convert.ToChar(NifData[CurArrayPos]);
-						CurArrayPos += 1;
-					}
-					NifHeaderData.StringsList[_i] = _stringChars.ToString();
+					FileNifCommonMethods.ReadSizedString(NifData, ref CurArrayPos, out NifHeaderData.StringsList[_i]);
 				}
 			}
 

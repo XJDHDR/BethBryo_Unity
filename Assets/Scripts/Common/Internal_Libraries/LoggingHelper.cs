@@ -3,7 +3,6 @@
 //
 
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace BethBryo_for_Unity_Common
@@ -44,16 +43,15 @@ namespace BethBryo_for_Unity_Common
 			if (_logQueueCount > 0)
 			{
 				// Prevent race conditions as much as possible.
-				List<LoggingData> _copiedQueue;
+				LoggingData[] _copiedQueue;
 				lock (LogQueue)
 				{
-					_copiedQueue = new List<LoggingData>(LogQueue);
+					_copiedQueue = LogQueue.ToArray();
 					LogQueue.Clear();
 				}
 
 				// Iterate through the list backwards because a ConcurrentStack stores entries in a Last-In-First-Out manner
-				_logQueueCount = _copiedQueue.Count;
-				for (int _i = _logQueueCount; _i > 0 ; --_i)
+				for (int _i = _copiedQueue.Length - 1; _i >= 0 ; --_i)
 				{
 					switch ((byte)_copiedQueue[_i].LogSeverity)
 					{
