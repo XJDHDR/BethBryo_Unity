@@ -8,21 +8,48 @@ namespace BethBryo_for_Unity_Common
 {
 	public class RootEngineManager : MonoBehaviour
 	{
+		#region Properties
+		public static RootEngineManager Singleton
+		{
+			get
+			{
+				if (_rootEngineManager == null)
+					_rootEngineManager = (RootEngineManager)FindObjectOfType(typeof(RootEngineManager));
+				return _rootEngineManager;
+			}
+		}
+
+		public static SupportedGames RunningGame
+		{
+			get { return _runningGame; }
+		}
+		#endregion
+
+		#region Static fields
+		/// <summary> Holds a reference to the GameObject that this class is attached to. </summary>
+		private static RootEngineManager _rootEngineManager;
+
+		/// <summary> Holds a value for the game that is currently running. </summary>
+		private static SupportedGames _runningGame = SupportedGames.NoGame;
+		#endregion
+
+		#region Fields
 		/// <summary> True after the _startupCode() method finishes running. </summary>
-		private static bool _startupIsDone;
+		private bool _startupIsDone;
 
 		/// <summary> Null if the _postStartupCode() hasn't run yet, false if still running and true after it is finished. </summary>
-		private static bool? _postStartupIsDone;
+		private bool? _postStartupIsDone;
+		#endregion
 
-
+		#region Unity specific methods
 #pragma warning disable IDE0051 // Remove unused private members
 		// Domain reloading is disabled: https://docs.unity3d.com/Manual/DomainReloading.html
 		// Thus, we need this to reset the above static variables in editor mode.
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
 		private static void _resetStaticVars()
 		{
-			_startupIsDone = false;
-			_postStartupIsDone = null;
+			_rootEngineManager = null;
+			_runningGame = SupportedGames.NoGame;
 		}
 
 
@@ -74,16 +101,24 @@ namespace BethBryo_for_Unity_Common
 		}
 #pragma warning restore IDE1006 // Naming Styles
 #pragma warning restore IDE0051 // Remove unused private members
+		#endregion
 
-
+		#region Class methods
 		/// <summary>
 		/// Used to execute any startup code that can be run during the Unity splash screen if a built version of the game is running. 
 		/// This likely means only code which is not dependant on Unity. This is because Unity's classes might not be constructed yet 
 		/// and the constructor is run in the loading thread, whereas Unity only allows calling it's methods in the main thread.
 		/// </summary>
-		private static void _startupCode()
+		private void _startupCode()
 		{
-			// Do stuff here
+			if (CommandLineArgsAnalysis.InterpretCommandLineArguments(out _runningGame))
+			{
+				switch (_runningGame)
+				{
+					case SupportedGames.Oblivion:
+						break;
+				}
+			}
 
 			_startupIsDone = true;
 		}
@@ -92,7 +127,7 @@ namespace BethBryo_for_Unity_Common
 		/// Used to execute any startup code that will run after the Unity splash screen. 
 		/// That means all construction code which requires Unity can go in here. However, this will run up to around 2.6 seconds after the above for builds.
 		/// </summary>
-		private static void _postStartupCode()
+		private void _postStartupCode()
 		{
 			// Startup monitoring variables are arranged this way just in case the Awake() method runs before the constructor is finished.
 			// In that case, Awake() is skipped and Update() runs this code after the constructor is done.
@@ -102,5 +137,6 @@ namespace BethBryo_for_Unity_Common
 
 			_postStartupIsDone = true;
 		}
+		#endregion
 	}
 }

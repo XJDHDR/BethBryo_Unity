@@ -6,7 +6,10 @@
 
 namespace BethBryo_for_Unity_Common
 {
-	internal static class FileNifReader
+	/// <summary>
+	/// This is the base class that is used to read all data from an Nif file.
+	/// </summary>
+	public static class FileNifReader
 	{
 		/// <summary>
 		/// Used to read the binary data in an Nif file and translate it into a form that is easier to read.

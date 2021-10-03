@@ -262,7 +262,7 @@ namespace BethBryo_for_Unity_Common
 			// We don't need most of the info here (with one exception) so just skip past all of it
 			if (_doBSStreamHeaderConditionCheck(NifHeaderData.NifVersionCombined, NifHeaderData.UserVersion))
 			{
-				_doSkipOverBSStreamHeader(NifData, NifLocation, ref CurArrayPos, out NifHeaderData.BSVersion);
+				_readBSStreamHeader(NifData, NifLocation, ref CurArrayPos, out NifHeaderData.BSVersion);
 			}
 
 			// Next, Nif versions from 30.0.0.0 up will have some Metadata be the next block of data. This is a byte array.
@@ -408,7 +408,7 @@ namespace BethBryo_for_Unity_Common
 			}
 		}
 
-		private static bool _doSkipOverBSStreamHeader(byte[] _nifData, string _nifLocation, ref int _curArrayPos, out uint? _bSVersion)
+		private static bool _readBSStreamHeader(byte[] _nifData, string _nifLocation, ref int _curArrayPos, out uint? _bSVersion)
 		{
 			// First piece of data is the BS Version as a 32-bit integer.
 			// Read this because it is the one value we need here and elsewhere.

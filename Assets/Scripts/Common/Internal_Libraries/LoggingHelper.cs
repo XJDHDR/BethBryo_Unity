@@ -9,14 +9,14 @@ namespace BethBryo_for_Unity_Common
 {
 	/// <summary>
 	/// Provides functionality to act as a middleman between scripts and Unity's logging system.
-	/// This is intended for use by scripts which either don't run in the main thread or need to not be directly dependant on Unity code.
+	/// This is intended for use by scripts which either don't run in the main thread (excluding Unity Jobs threads) or need to not be directly dependant on Unity code.
 	/// If these don't apply, it's better to just use Unity's standard logging methods.
 	/// </summary>
 	public static class LoggingHelper
 	{
 		/// <summary>
 		/// Holds all of the log messages that have been queued to be pushed into Unity's logging system.
-		/// This is intended for use by scripts which either don't run in the main thread or need to not be directly dependant on Unity code.
+		/// This is intended for use by scripts which either don't run in the main thread (excluding Unity Jobs threads) or need to not be directly dependant on Unity code.
 		/// If these don't apply, it's better to just use Unity's standard logging methods.
 		/// </summary>
 		// Using a ConcurrentStack because it is the only thread-safe container that supports a Clear() method at the time of writing
@@ -53,23 +53,23 @@ namespace BethBryo_for_Unity_Common
 				// Iterate through the list backwards because a ConcurrentStack stores entries in a Last-In-First-Out manner
 				for (int _i = _copiedQueue.Length - 1; _i >= 0 ; --_i)
 				{
-					switch ((byte)_copiedQueue[_i].LogSeverity)
+					switch (_copiedQueue[_i].LogSeverity)
 					{
-						case 1:
-							Debug.LogFormat(_copiedQueue[_i].LogMessage);
+						case LogSeverityValue.Info:
+							Debug.Log(_copiedQueue[_i].LogMessage);
 							break;
 
-						case 2:
-							Debug.LogWarningFormat(_copiedQueue[_i].LogMessage);
+						case LogSeverityValue.Warning:
+							Debug.LogWarning(_copiedQueue[_i].LogMessage);
 							break;
 
-						case 3:
-							Debug.LogErrorFormat(_copiedQueue[_i].LogMessage);
+						case LogSeverityValue.Error:
+							Debug.LogError(_copiedQueue[_i].LogMessage);
 							break;
 
 						default:
-							Debug.LogErrorFormat("The following log message did not have a correct severity value assigned " +
-								"(must be 1, 2 or 3 but it was \"" + _copiedQueue[_i].LogSeverity + "\" instead):\n" +
+							Debug.LogError("The following log message did not have a correct severity value assigned " +
+								$"(must be 1, 2 or 3 but it was \"{_copiedQueue[_i].LogSeverity}\" instead):\n" +
 								_copiedQueue[_i].LogMessage);
 							break;
 					}
